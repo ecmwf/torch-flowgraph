@@ -1,0 +1,24 @@
+# (C) Copyright 2026 ECMWF.
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+# In applying this licence, ECMWF does not waive the privileges and immunities
+# granted to it by virtue of its status as an intergovernmental organisation
+# nor does it submit to any jurisdiction.
+#
+
+
+"""PyTorch model tracing sub-package.
+
+Public API
+----------
+:class:`ModelGraph`
+    A :class:`~torch_flowgraph.GraphBase` constructed by tracing a live
+    ``torch.nn.Module``.  Use :meth:`~ModelGraph.from_model` to build one.
+"""
+
+from .graph import ModelGraph
+
+__all__ = [
+    "ModelGraph",
+]
