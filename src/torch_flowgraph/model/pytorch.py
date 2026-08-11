@@ -708,6 +708,71 @@ class GraphBuilder:
                     break
                 queue.extend(parent_of.get(p, []))
 
+    def _break_cycles(self):
+        """Remove feedback edges so the op graph is a DAG.
+
+        In-place tensor mutations make the tracer alias several *versions* of
+        one tensor onto a single node.  The classic offender is a returned
+        buffer that is reshaped/cloned and then written in place, e.g.
+        ``aifs``'s ``x_out = rearrange(...).to(...).clone(); x_out[..., idx]
+        += x[..., idx]; return x_out``.  When such a buffer is reused across
+        unrolled rollout steps or a residual stream, the pre-write reads and
+        the post-write output of the *same* tensor object attach to the same
+        node, and the value-flow graph picks up a back-edge (an op pointing at
+        one of its own ancestors).
+
+        The underlying computation is always a DAG — the cycles are purely an
+        artefact of representing every version of an in-place-mutated buffer
+        with one node.  Downstream consumers (topological layout, clan
+        clustering via :func:`networkx.topological_generations`) require a DAG
+        and raise :class:`networkx.NetworkXUnfeasible` otherwise.  This pass
+        classifies edges with an iterative depth-first search (visiting roots
+        in ascending node-id order, which follows creation/data-flow order so
+        the *forward* edges are kept) and drops every back-edge, yielding a
+        valid feedback arc set.
+
+        Returns the list of removed ``(src, dst)`` edges.
+        """
+        from collections import defaultdict
+
+        succ = defaultdict(list)
+        for a, b in self.edges:
+            succ[a].append(b)
+
+        WHITE, GRAY, BLACK = 0, 1, 2
+        color = defaultdict(int)
+        back = set()
+
+        # Iterative DFS — the op graph can be thousands of nodes deep, which
+        # would blow the recursion limit of a recursive implementation.
+        for root in sorted(self.nodes):
+            if color[root] != WHITE:
+                continue
+            color[root] = GRAY
+            stack = [(root, iter(succ[root]))]
+            while stack:
+                u, it = stack[-1]
+                advanced = False
+                for v in it:
+                    if color[v] == GRAY:
+                        back.add((u, v))
+                    elif color[v] == WHITE:
+                        color[v] = GRAY
+                        stack.append((v, iter(succ[v])))
+                        advanced = True
+                        break
+                if not advanced:
+                    color[u] = BLACK
+                    stack.pop()
+
+        if back:
+            self.edges = [e for e in self.edges if tuple(e) not in back]
+            logger.debug(
+                "[break-cycles] removed %d back-edge(s): %s",
+                len(back), sorted(back),
+            )
+        return sorted(back)
+
     def build_model_graph(self, model, shape, add_extra_nodes=False):
         """Run the model forward pass and construct the :class:`~torch_flowgraph.model.graph.ModelGraph`.
 
@@ -790,6 +855,17 @@ class GraphBuilder:
 
         self._fix_inplace_dead_ends()
         _log_mem(f"build_model_graph: dead-end fix done  edges={len(self.edges)}")
+
+        # In-place mutation of a reused/returned buffer can alias several
+        # versions of one tensor onto a single node, making the value-flow
+        # graph cyclic.  The computation is a DAG; strip the artefact
+        # back-edges so downstream topological layout works.
+        removed = self._break_cycles()
+        if removed:
+            _log_mem(
+                f"build_model_graph: broke {len(removed)} cycle back-edge(s)  "
+                f"edges={len(self.edges)}"
+            )
 
         for h in self.hooks:
             h.remove()
