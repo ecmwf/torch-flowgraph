@@ -193,3 +193,4 @@ _version.py
 !images/*.svg
 tempCodeRunnerFile.python
 .vscode/
+*.md

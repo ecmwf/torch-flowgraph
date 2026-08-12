@@ -320,6 +320,15 @@ class GraphBuilder:
         self.seen_clusters = set()
         self.other = {}
         self._op_count = 0
+        # Per-builder de-duplication of hooked modules.  Keyed by id(module) so
+        # the guard is scoped to THIS build only.  Previously a persistent flag
+        # was set on the module instance (``module._tfg_pre_hooked``); because a
+        # fresh GraphBuilder is created per build, that flag leaked across builds
+        # — if a first tracing attempt registered hooks and then failed
+        # mid-forward, the flags survived, so the retry re-hooked nothing and
+        # produced a flat, hierarchy-less graph.
+        self._pre_hooked = set()
+        self._post_hooked = set()
 
     def push_cluster(self, module):
         """Push a new cluster onto the stack for the given module.
@@ -530,8 +539,8 @@ class GraphBuilder:
         module:
             ``torch.nn.Module`` to hook.
         """
-        if not getattr(module, "_tfg_pre_hooked", False):
-            module._tfg_pre_hooked = True
+        if id(module) not in self._pre_hooked:
+            self._pre_hooked.add(id(module))
             self.hooks.append(module.register_forward_pre_hook(self.enter_node))
 
     def leave_node(self, module, input, output):
@@ -624,8 +633,8 @@ class GraphBuilder:
         module:
             ``torch.nn.Module`` to hook.
         """
-        if not getattr(module, "_tfg_post_hooked", False):
-            module._tfg_post_hooked = True
+        if id(module) not in self._post_hooked:
+            self._post_hooked.add(id(module))
             self.hooks.append(module.register_forward_hook(self.leave_node))
 
     def register_function(self, func, args, kwargs, result):
@@ -824,7 +833,18 @@ class GraphBuilder:
                 x_node.rank = "min"
 
             _log_mem("build_model_graph: forward pass starting")
-            output = model(input)
+            try:
+                output = model(input)
+            except BaseException:
+                # A failed attempt must leave no dangling hook handles on the
+                # model's modules: callers (e.g. get-model-graph.py) retry
+                # tracing with a different input shape on the SAME modules, and
+                # stale handles from this attempt would fire into a discarded
+                # builder.  The per-builder hook guard already prevents the
+                # classic flat-graph regression; this keeps module state clean.
+                for h in self.hooks:
+                    h.remove()
+                raise
             _log_mem(f"build_model_graph: forward pass done  nodes={len(self.nodes)}  edges={len(self.edges)}")
 
             if isinstance(output, dict):
