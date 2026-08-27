@@ -20,7 +20,6 @@ with construction from live PyTorch models.
 
 import copy
 
-
 from .clusters import Cluster
 from .nodes import CollapsedNode
 from .nodes import FunctionNode
@@ -50,15 +49,14 @@ def _compute_shortcut_weights(G):
     except nx.NetworkXUnfeasible:
         return  # cyclic graph — nothing we can do
 
-    order = {n: i for i, n in enumerate(topo)}
+    # order = {n: i for i, n in enumerate(topo)}
 
     # longest_dist[n] = longest distance from any source to n.
     longest_dist: dict[int, int] = {n: 0 for n in topo}
     for n in topo:
         for s in G.successors(n):
             d = longest_dist[n] + 1
-            if d > longest_dist[s]:
-                longest_dist[s] = d
+            longest_dist[s] = max(d, longest_dist[s])
 
     for a, b in G.edges:
         # Longest path from a to b: difference in longest-distance values
@@ -358,7 +356,7 @@ class GraphBase:
     # Graph transformations
     # ------------------------------------------------------------------
 
-    def recluster(self, clustering) -> 'GraphBase':
+    def recluster(self, clustering) -> "GraphBase":
         """Return a new graph with a different cluster hierarchy.
 
         Applies *clustering* — a :class:`~torch_flowgraph.clustering.Clustering`
@@ -524,7 +522,7 @@ class GraphBase:
 
         return GraphBase(new_nodes, edges, clusters)
 
-    def collapse_to_level(self, level: int) -> 'GraphBase':
+    def collapse_to_level(self, level: int) -> "GraphBase":
         """Return a new graph with every cluster at depth ``level + 1`` collapsed
         into a single node.
 
@@ -556,7 +554,7 @@ class GraphBase:
         target = level + 1
 
         new_nodes: dict[int, Node] = {}
-        node_repr: dict[int, int] = {}       # original node-id → new node-id
+        node_repr: dict[int, int] = {}  # original node-id → new node-id
         collapsed_for: dict[int, CollapsedNode] = {}  # id(cluster) → its collapsed node
 
         def _keep(n):
@@ -615,7 +613,7 @@ class GraphBase:
 
         return GraphBase(new_nodes, list(edges), clusters)
 
-    def merge_repeated(self) -> 'GraphBase':
+    def merge_repeated(self) -> "GraphBase":
         """Return a new graph with consecutive repeated sibling clusters merged.
 
         For each run of N consecutive sibling clusters sharing the same name
@@ -630,6 +628,7 @@ class GraphBase:
         GraphBase
             New graph with the merged cluster tree.
         """
+
         def _fingerprint(c):
             return (c.name, tuple(_fingerprint(ch) for ch in c.children))
 
@@ -701,7 +700,7 @@ class GraphBase:
 
         nodes = self.nodes.copy()
         edges = list(self.edges)
-        _cluster_node_id: dict[int, int] = {}    # id(cluster) → new CollapsedNode id
+        _cluster_node_id: dict[int, int] = {}  # id(cluster) → new CollapsedNode id
         _parent_extra_nodes: dict[int, list] = {}  # id(cluster) → CollapsedNode ids
         _cluster_path: dict[int, str] = {}
 
@@ -715,7 +714,7 @@ class GraphBase:
 
         def _is_expanded(c):
             path = _cluster_path.get(id(c), "")
-            return path == "" or path in expanded   # root ("") always expanded
+            return path == "" or path in expanded  # root ("") always expanded
 
         def _ensure_collapsed(c):
             """Create (or reuse) the CollapsedNode representing cluster *c*."""
@@ -788,9 +787,7 @@ class GraphBase:
                         # migrate those entries to point at the new collapsed id.
                         src = nodes.get(a)
                         if isinstance(src, CollapsedNode) and b in src._sources_for:
-                            src._sources_for.setdefault(cn, []).extend(
-                                src._sources_for.pop(b)
-                            )
+                            src._sources_for.setdefault(cn, []).extend(src._sources_for.pop(b))
                     # Both inside → internal edge, dropped.
                 edges[:] = new_edges
 
@@ -831,9 +828,7 @@ class GraphBase:
             if orig_node is None or not isinstance(orig_node, CollapsedNode):
                 continue
             new_nodes[renumber[old_id]]._sources_for = {
-                renumber[old_t]: srcs
-                for old_t, srcs in orig_node._sources_for.items()
-                if old_t in renumber
+                renumber[old_t]: srcs for old_t, srcs in orig_node._sources_for.items() if old_t in renumber
             }
 
         def _fix_cluster(c, parent):
@@ -844,11 +839,7 @@ class GraphBase:
             result.nodes = [renumber[n_id] for n_id in own_ids if n_id in renumber]
 
             # Only recurse into children that are expanded.
-            result.children = [
-                _fix_cluster(child, result)
-                for child in c.children
-                if _is_expanded(child)
-            ]
+            result.children = [_fix_cluster(child, result) for child in c.children if _is_expanded(child)]
 
             # User-expanded (non-root) cluster boxes get a collapse URL.
             # Auto-expanded clusters (depth-based) intentionally do not, so

@@ -21,7 +21,6 @@ torch = pytest.importorskip("torch")
 from torch_flowgraph.model.graph import ModelGraph  # noqa: E402
 from torch_flowgraph.nodes import ShapeNode  # noqa: E402
 
-
 # ---------------------------------------------------------------------------
 # Dummy models
 # ---------------------------------------------------------------------------
@@ -91,17 +90,13 @@ class TestDictToDict:
 
     def test_input_nodes_named_correctly(self, graph):
         """Input ShapeNodes should be x_alpha and x_beta."""
-        shape_labels = {
-            node.label for node in graph.nodes.values() if isinstance(node, ShapeNode)
-        }
+        shape_labels = {node.label for node in graph.nodes.values() if isinstance(node, ShapeNode)}
         assert "x_alpha" in shape_labels, f"Missing x_alpha in {shape_labels}"
         assert "x_beta" in shape_labels, f"Missing x_beta in {shape_labels}"
 
     def test_output_nodes_named_correctly(self, graph):
         """Output ShapeNodes should be y_alpha and y_beta."""
-        shape_labels = {
-            node.label for node in graph.nodes.values() if isinstance(node, ShapeNode)
-        }
+        shape_labels = {node.label for node in graph.nodes.values() if isinstance(node, ShapeNode)}
         assert "y_alpha" in shape_labels, f"Missing y_alpha in {shape_labels}"
         assert "y_beta" in shape_labels, f"Missing y_beta in {shape_labels}"
 
@@ -110,12 +105,8 @@ class TestDictToDict:
         sources, sinks = graph.sources_and_sinks()
         bad_sources = [s for s in sources if not isinstance(s, ShapeNode)]
         bad_sinks = [s for s in sinks if not isinstance(s, ShapeNode)]
-        assert not bad_sources, (
-            f"Non-Shape sources: {[(n.n, type(n).__name__, n.label) for n in bad_sources]}"
-        )
-        assert not bad_sinks, (
-            f"Non-Shape sinks: {[(n.n, type(n).__name__, n.label) for n in bad_sinks]}"
-        )
+        assert not bad_sources, f"Non-Shape sources: {[(n.n, type(n).__name__, n.label) for n in bad_sources]}"
+        assert not bad_sinks, f"Non-Shape sinks: {[(n.n, type(n).__name__, n.label) for n in bad_sinks]}"
 
 
 class TestDictToTensor:
@@ -131,17 +122,13 @@ class TestDictToTensor:
         assert len(graph.edges) > 0
 
     def test_input_nodes_named_correctly(self, graph):
-        shape_labels = {
-            node.label for node in graph.nodes.values() if isinstance(node, ShapeNode)
-        }
+        shape_labels = {node.label for node in graph.nodes.values() if isinstance(node, ShapeNode)}
         assert "x_alpha" in shape_labels, f"Missing x_alpha in {shape_labels}"
         assert "x_beta" in shape_labels, f"Missing x_beta in {shape_labels}"
 
     def test_single_output_node(self, graph):
         """Output should be a single 'y' ShapeNode."""
-        shape_labels = {
-            node.label for node in graph.nodes.values() if isinstance(node, ShapeNode)
-        }
+        shape_labels = {node.label for node in graph.nodes.values() if isinstance(node, ShapeNode)}
         assert "y" in shape_labels, f"Missing y in {shape_labels}"
         # Should NOT have y_alpha / y_beta
         assert "y_alpha" not in shape_labels
@@ -151,12 +138,8 @@ class TestDictToTensor:
         sources, sinks = graph.sources_and_sinks()
         bad_sources = [s for s in sources if not isinstance(s, ShapeNode)]
         bad_sinks = [s for s in sinks if not isinstance(s, ShapeNode)]
-        assert not bad_sources, (
-            f"Non-Shape sources: {[(n.n, type(n).__name__, n.label) for n in bad_sources]}"
-        )
-        assert not bad_sinks, (
-            f"Non-Shape sinks: {[(n.n, type(n).__name__, n.label) for n in bad_sinks]}"
-        )
+        assert not bad_sources, f"Non-Shape sources: {[(n.n, type(n).__name__, n.label) for n in bad_sources]}"
+        assert not bad_sinks, f"Non-Shape sinks: {[(n.n, type(n).__name__, n.label) for n in bad_sinks]}"
 
 
 class TestDictWithInternalDict:
@@ -172,25 +155,17 @@ class TestDictWithInternalDict:
         assert len(graph.edges) > 0
 
     def test_input_nodes_named_correctly(self, graph):
-        shape_labels = {
-            node.label for node in graph.nodes.values() if isinstance(node, ShapeNode)
-        }
+        shape_labels = {node.label for node in graph.nodes.values() if isinstance(node, ShapeNode)}
         assert "x_alpha" in shape_labels
         assert "x_beta" in shape_labels
 
     def test_single_output_node(self, graph):
-        shape_labels = {
-            node.label for node in graph.nodes.values() if isinstance(node, ShapeNode)
-        }
+        shape_labels = {node.label for node in graph.nodes.values() if isinstance(node, ShapeNode)}
         assert "y" in shape_labels
 
     def test_sources_and_sinks(self, graph):
         sources, sinks = graph.sources_and_sinks()
         bad_sources = [s for s in sources if not isinstance(s, ShapeNode)]
         bad_sinks = [s for s in sinks if not isinstance(s, ShapeNode)]
-        assert not bad_sources, (
-            f"Non-Shape sources: {[(n.n, type(n).__name__, n.label) for n in bad_sources]}"
-        )
-        assert not bad_sinks, (
-            f"Non-Shape sinks: {[(n.n, type(n).__name__, n.label) for n in bad_sinks]}"
-        )
+        assert not bad_sources, f"Non-Shape sources: {[(n.n, type(n).__name__, n.label) for n in bad_sources]}"
+        assert not bad_sinks, f"Non-Shape sinks: {[(n.n, type(n).__name__, n.label) for n in bad_sinks]}"

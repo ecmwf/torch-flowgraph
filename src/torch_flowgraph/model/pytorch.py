@@ -38,7 +38,6 @@ import threading
 import torch
 
 import torch_flowgraph.patches as _patches  # noqa: F401 — apply torch meta-device patches
-
 from torch_flowgraph.clusters import Cluster
 from torch_flowgraph.model.graph import ModelGraph
 from torch_flowgraph.nodes import FunctionNode
@@ -778,7 +777,8 @@ class GraphBuilder:
             self.edges = [e for e in self.edges if tuple(e) not in back]
             logger.debug(
                 "[break-cycles] removed %d back-edge(s): %s",
-                len(back), sorted(back),
+                len(back),
+                sorted(back),
             )
         return sorted(back)
 
@@ -821,13 +821,13 @@ class GraphBuilder:
                 device = torch.device("cpu")
 
             if isinstance(shape, dict):
-                x_node = {name: self.shape_node(f'x_{name}', s) for name, s in shape.items()}
-                input = {name: Tracker(torch.empty(s, device='meta')) for name, s in shape.items()}
+                x_node = {name: self.shape_node(f"x_{name}", s) for name, s in shape.items()}
+                input = {name: Tracker(torch.empty(s, device=device)) for name, s in shape.items()}
                 for name, node in x_node.items():
                     input[name].owner = node
                     node.rank = "min"
             else:
-                input = Tracker(torch.empty(shape, device='meta'))
+                input = Tracker(torch.empty(shape, device=device))
                 x_node = self.shape_node("x", shape)
                 input.owner = x_node
                 x_node.rank = "min"
@@ -882,10 +882,7 @@ class GraphBuilder:
         # back-edges so downstream topological layout works.
         removed = self._break_cycles()
         if removed:
-            _log_mem(
-                f"build_model_graph: broke {len(removed)} cycle back-edge(s)  "
-                f"edges={len(self.edges)}"
-            )
+            _log_mem(f"build_model_graph: broke {len(removed)} cycle back-edge(s)  " f"edges={len(self.edges)}")
 
         for h in self.hooks:
             h.remove()
@@ -1035,7 +1032,11 @@ class Tracker(torch.Tensor):
                 result = _map_nested(_meta_to_tracker, meta_result)
         except Exception as _meta_err:
             # Log which ops fail meta so we can identify OOM sources.
-            _shapes = [getattr(a, 'shape', None) for a in (args if isinstance(args, (list, tuple)) else [args]) if hasattr(a, 'shape')]
+            _shapes = [
+                getattr(a, "shape", None)
+                for a in (args if isinstance(args, (list, tuple)) else [args])
+                if hasattr(a, "shape")
+            ]
             logger.debug("[meta-fail] %s  shapes=%s  err=%s", func.__name__, _shapes, _meta_err)
             result = super().__torch_function__(func, types, args, kwargs)
 

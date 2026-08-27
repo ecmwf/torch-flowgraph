@@ -139,7 +139,5 @@ def main() -> None:
         st.image(svg, width="content")
 
 
-
-
 if __name__ == "__main__":
     main()

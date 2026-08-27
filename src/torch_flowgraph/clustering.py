@@ -35,7 +35,8 @@ existing code does not break::
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 
 from .clusters import Cluster
 
@@ -69,6 +70,7 @@ class Clustering(ABC):
 # ---------------------------------------------------------------------------
 # Clan clustering
 # ---------------------------------------------------------------------------
+
 
 class ClanClustering(Clustering):
     """Re-cluster using the McCreary clan-based graph-parsing algorithm.
@@ -138,6 +140,7 @@ def _dissolve_leaf_clusters(cluster):
 # ---------------------------------------------------------------------------
 # Selective clustering (level / name filters)
 # ---------------------------------------------------------------------------
+
 
 class _SelectiveClustering(Clustering):
     """Base for strategies that select a subset of existing cluster boxes.
@@ -246,6 +249,7 @@ class NameClustering(_SelectiveClustering):
 # No-op clustering — clears all cluster boxes
 # ---------------------------------------------------------------------------
 
+
 class NoClustering(Clustering):
     """Remove all cluster boxes, rendering every node at the top level.
 
@@ -263,6 +267,7 @@ class NoClustering(Clustering):
 # ---------------------------------------------------------------------------
 # Backward-compatibility shim
 # ---------------------------------------------------------------------------
+
 
 def apply_clan_clustering(graph):
     """Re-cluster *graph* using the McCreary clan algorithm.

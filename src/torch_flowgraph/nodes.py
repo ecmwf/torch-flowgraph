@@ -273,6 +273,7 @@ class InputOutput(Node):
             Dictionary with a ``"label"`` key showing the tensor shape, or
             an empty dict if no shape information is available.
         """
+
         def _(x):
             if isinstance(x, (tuple, list)) and len(x) == 2 and x[0] == "_tracker":
                 return x[1]
@@ -375,6 +376,7 @@ class FunctionNode(InputOutput):
             Mutable cache mapping object-id to the :class:`Node` that was
             already created for it (avoids duplicate nodes for shared tensors).
         """
+
         def _(x):
             if isinstance(x, (tuple, list)) and len(x) == 3 and x[0] in ("_tensor", "_parameter"):
                 p = data.get(x[2])
@@ -422,6 +424,7 @@ class LabelNode(Node):
     Used for graph entry/exit annotations such as the input tensor shape
     marker ``"x"`` and output tensor shape marker ``"y"``.
     """
+
     pass
 
 
@@ -469,12 +472,14 @@ class CollapsedNode(Node):
             },
         )
         if self.is_repeated:
-            d.update({
-                "fillcolor": "#fff3e0",
-                "color": "#ff922b",
-                "penwidth": 2.5,
-                "peripheries": 2,
-            })
+            d.update(
+                {
+                    "fillcolor": "#fff3e0",
+                    "color": "#ff922b",
+                    "penwidth": 2.5,
+                    "peripheries": 2,
+                }
+            )
         if self.explore_url is not None:
             d["URL"] = self.explore_url
         return d

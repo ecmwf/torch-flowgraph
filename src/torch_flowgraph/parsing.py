@@ -103,6 +103,7 @@ class Kind(Enum):
     LEAF:
         Singleton clan — contains exactly one node.
     """
+
     UNDEF = 0
     LINEAR = 1
     INDEPENDENT = 2
@@ -186,7 +187,7 @@ class Reachability:
     """
 
     def __init__(self, G):
-        self._anc = {}   # node -> frozenset of strict ancestors
+        self._anc = {}  # node -> frozenset of strict ancestors
         self._desc = {}  # node -> frozenset of strict descendants
 
         # Ancestors: process in topological order (parents before children).
@@ -1226,7 +1227,7 @@ class Parser:
                     Fi.G = Fi._G
                     Fi.kind = Kind.LINEAR
                     F_nodes = Fi.nodes  # F now refers to the merged clan
-                    duplicate = True    # Fi already in clans, nothing to re-add
+                    duplicate = True  # Fi already in clans, nothing to re-add
                     break
 
                 # Proper containment (F ⊂ Fi or Fi ⊂ F): no structural change.

@@ -20,27 +20,22 @@ import tempfile
 
 import pytest
 
-from torch_flowgraph import (
-    ClanClustering,
-    GraphBase,
-    LevelClustering,
-    NameClustering,
-    NoClustering,
-    apply_clan_clustering,
-    validate_graph,
-)
+from torch_flowgraph import ClanClustering
+from torch_flowgraph import GraphBase
+from torch_flowgraph import LevelClustering
+from torch_flowgraph import NameClustering
+from torch_flowgraph import NoClustering
+from torch_flowgraph import apply_clan_clustering
+from torch_flowgraph import validate_graph
 from torch_flowgraph.clusters import Cluster
-from torch_flowgraph.nodes import (
-    CollapsedNode,
-    FunctionNode,
-    LabelNode,
-    ModuleNode,
-    Node,
-    ParameterNode,
-    ShapeNode,
-    TensorNode,
-    url,
-)
+from torch_flowgraph.nodes import CollapsedNode
+from torch_flowgraph.nodes import FunctionNode
+from torch_flowgraph.nodes import LabelNode
+from torch_flowgraph.nodes import ModuleNode
+from torch_flowgraph.nodes import Node
+from torch_flowgraph.nodes import ParameterNode
+from torch_flowgraph.nodes import ShapeNode
+from torch_flowgraph.nodes import url
 
 FIXTURE = os.path.join(os.path.dirname(__file__), os.pardir, "tinynet.json")
 

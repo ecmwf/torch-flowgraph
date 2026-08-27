@@ -63,9 +63,7 @@ def _check_cluster_membership(graph):
     for n, clusters in owners.items():
         if len(clusters) > 1:
             names = ", ".join(repr(c.name) for c in clusters)
-            problems.append(
-                f"node {n} ({graph.nodes[n].label}) belongs to {len(clusters)} clusters: {names}"
-            )
+            problems.append(f"node {n} ({graph.nodes[n].label}) belongs to {len(clusters)} clusters: {names}")
 
     for n in ids:
         if n not in owners:

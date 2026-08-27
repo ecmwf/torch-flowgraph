@@ -33,7 +33,6 @@ Public API
 """
 
 from . import patches as _patches  # noqa: F401 — apply torch meta-device patches
-
 from ._post_import import on_import
 from .clustering import ClanClustering
 from .clustering import Clustering

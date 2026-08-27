@@ -38,7 +38,6 @@ raw builder ids).
 """
 
 import networkx as nx
-import pytest
 
 from torch_flowgraph.model.pytorch import GraphBuilder
 from torch_flowgraph.nodes import FunctionNode
@@ -69,18 +68,45 @@ def _to_nx(builder):
 #                -> 3:clone -> 2:setitem -> 1:y
 # plus the feeder tail (149:div/150:sub/151:getitem, 146:add_/147:getitem).
 SMALL_SCC_EDGES = [
-    (1, 7), (7, 6), (6, 5), (5, 4), (4, 3), (3, 2), (2, 1),  # the ring
-    (151, 150), (150, 149), (149, 2),                        # normalize feeders
-    (147, 146), (146, 4),                                    # denormalize feeder
-    (3, 151), (5, 147),                                      # getitem views into buffers
+    (1, 7),
+    (7, 6),
+    (6, 5),
+    (5, 4),
+    (4, 3),
+    (3, 2),
+    (2, 1),  # the ring
+    (151, 150),
+    (150, 149),
+    (149, 2),  # normalize feeders
+    (147, 146),
+    (146, 4),  # denormalize feeder
+    (3, 151),
+    (5, 147),  # getitem views into buffers
 ]
 
 # Big SCC (residual stream): a ring of transformer-block residual adds.
 #   ... 33:add -> 30:add -> 25:add -> 22:add -> 18:linear -> 134:add -> ... -> 33:add
 RESIDUAL_RING_EDGES = [
-    (62, 57), (57, 54), (54, 49), (49, 46), (46, 41), (41, 38), (38, 33),
-    (33, 30), (30, 25), (25, 22), (22, 18), (18, 134), (134, 129), (129, 126),
-    (126, 121), (121, 118), (118, 113), (113, 110), (110, 105), (105, 65),
+    (62, 57),
+    (57, 54),
+    (54, 49),
+    (49, 46),
+    (46, 41),
+    (41, 38),
+    (38, 33),
+    (33, 30),
+    (30, 25),
+    (25, 22),
+    (22, 18),
+    (18, 134),
+    (134, 129),
+    (129, 126),
+    (126, 121),
+    (121, 118),
+    (118, 113),
+    (113, 110),
+    (110, 105),
+    (105, 65),
     (65, 62),  # closes the ring
 ]
 

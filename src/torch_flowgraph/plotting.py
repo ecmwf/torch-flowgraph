@@ -226,16 +226,16 @@ def _render_plan(path, plan):
                     print('style="dashed";', file=f)
                 print('fontname="Helvetica-Bold,Arial-Bold,sans-serif";', file=f)
                 print('fontcolor="#343a40";', file=f)
-                print('fontsize=11;', file=f)
+                print("fontsize=11;", file=f)
                 print('labeljust="l";', file=f)
-                print('margin=10;', file=f)
+                print("margin=10;", file=f)
                 for k, v in c["dot_attributes"].items():
                     print(f"{k}={json.dumps(v)};", file=f)
                 if highlight:
                     print('color="#ffc9c9";', file=f)
                     if cluster_bg:
                         print('fillcolor="#fff5f5";', file=f)
-                    print('penwidth=2;', file=f)
+                    print("penwidth=2;", file=f)
                 else:
                     print('color="#dee2e6";', file=f)
                     if cluster_bg:

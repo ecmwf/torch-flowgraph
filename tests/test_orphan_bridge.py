@@ -31,7 +31,6 @@ from torch_flowgraph.nodes import ParameterNode  # noqa: E402
 from torch_flowgraph.nodes import ShapeNode  # noqa: E402
 from torch_flowgraph.nodes import TensorNode  # noqa: E402
 
-
 # ---------------------------------------------------------------------------
 # Synthetic reproduction of the GraphTransformerMapperBlock pattern.
 # ---------------------------------------------------------------------------
@@ -131,8 +130,7 @@ def test_sources_and_sinks_basic():
         f"{[(n.n, type(n).__name__, n.label) for n in bad_sources]}"
     )
     assert not bad_sinks, (
-        f"Non-Shape sinks (no outgoing edges): "
-        f"{[(n.n, type(n).__name__, n.label) for n in bad_sinks]}"
+        f"Non-Shape sinks (no outgoing edges): " f"{[(n.n, type(n).__name__, n.label) for n in bad_sinks]}"
     )
 
 
@@ -177,10 +175,8 @@ def test_shape_probe_does_not_create_orphan():
     bad_sinks = [s for s in sinks if not isinstance(s, ShapeNode)]
 
     assert not bad_sources, (
-        f"Non-Shape/Parameter/Tensor sources: "
-        f"{[(n.n, type(n).__name__, n.label) for n in bad_sources]}"
+        f"Non-Shape/Parameter/Tensor sources: " f"{[(n.n, type(n).__name__, n.label) for n in bad_sources]}"
     )
     assert not bad_sinks, (
-        f"Non-Shape sinks (tensor_split orphan?): "
-        f"{[(n.n, type(n).__name__, n.label) for n in bad_sinks]}"
+        f"Non-Shape sinks (tensor_split orphan?): " f"{[(n.n, type(n).__name__, n.label) for n in bad_sinks]}"
     )

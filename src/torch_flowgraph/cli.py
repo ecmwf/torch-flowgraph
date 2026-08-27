@@ -39,9 +39,7 @@ def main(argv=None) -> int:
 
     validate = sub.add_parser("validate", help="Check a graph JSON file for inconsistencies.")
     validate.add_argument("path", help="Path to a graph JSON file.")
-    validate.add_argument(
-        "-q", "--quiet", action="store_true", help="Suppress the report; only set the exit code."
-    )
+    validate.add_argument("-q", "--quiet", action="store_true", help="Suppress the report; only set the exit code.")
     validate.set_defaults(func=_cmd_validate)
 
     args = parser.parse_args(argv)

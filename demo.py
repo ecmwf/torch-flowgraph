@@ -9,8 +9,8 @@
 
 import os
 
-import torch
 import torch.nn as nn
+
 from torch_flowgraph import GraphBase
 from torch_flowgraph.model import ModelGraph
 
@@ -19,9 +19,13 @@ class TinyNet(nn.Module):
     def __init__(self):
         super().__init__()
         self.features = nn.Sequential(
-            nn.Conv2d(3, 16, 3, padding=1), nn.BatchNorm2d(16), nn.ReLU(),
+            nn.Conv2d(3, 16, 3, padding=1),
+            nn.BatchNorm2d(16),
+            nn.ReLU(),
             nn.MaxPool2d(2),
-            nn.Conv2d(16, 32, 3, padding=1), nn.BatchNorm2d(32), nn.ReLU(),
+            nn.Conv2d(16, 32, 3, padding=1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
             nn.AdaptiveAvgPool2d(4),
         )
         self.classifier = nn.Linear(32 * 16, 10)
@@ -50,6 +54,7 @@ print(f"module-level networkx: {G_modules.number_of_nodes()} nodes, {G_modules.n
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+
 def render(g, stem, *, fmt="png", clusters=None, depth=None, links=False):
     """Plot *g* to images/<stem>.<fmt>, forwarding optional kwargs."""
     kwargs = {}
@@ -68,18 +73,18 @@ def render(g, stem, *, fmt="png", clusters=None, depth=None, links=False):
 # ══════════════════════════════════════════════════════════════════════════════
 print("\n── Flat (no subgraph boxes) ──────────────────────────────────────────")
 
-render(graph,                        "flat_full",    clusters=[])
-render(graph.collapsed(max_depth=1), "flat_depth1",  clusters=[])
-render(graph.only_modules(),         "flat_modules", clusters=[])
+render(graph, "flat_full", clusters=[])
+render(graph.collapsed(max_depth=1), "flat_depth1", clusters=[])
+render(graph.only_modules(), "flat_modules", clusters=[])
 
 # ══════════════════════════════════════════════════════════════════════════════
 # 2. Module (nn.Module) cluster subgraphs
 # ══════════════════════════════════════════════════════════════════════════════
 print("\n── Module clusters ───────────────────────────────────────────────────")
 
-render(graph,                        "mod_full")
+render(graph, "mod_full")
 render(graph.collapsed(max_depth=1), "mod_depth1")
-render(graph.only_modules(),         "mod_modules")
+render(graph.only_modules(), "mod_modules")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # 3. With PyTorch documentation hyperlinks (SVG — links are lost in PNG)
