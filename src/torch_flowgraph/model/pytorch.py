@@ -992,53 +992,15 @@ class Tracker(torch.Tensor):
                 or name in IN_PLACE_OPS
             )
 
-        # Use meta tensors to compute output shapes without allocating real storage.
-        # _to_meta uses DisableTorchFunctionSubclass to access .size() and .dtype
-        # without triggering recursive __torch_function__ dispatch (accessing .dtype
-        # on a Tracker subclass dispatches through __torch_function__, which would
-        # call _to_meta again, eventually hitting RecursionError and leaving
-        # _track=False on the original tensor — breaking all subsequent ops).
-        def _to_meta(x):
-            if isinstance(x, Tracker):
-                with torch._C.DisableTorchFunctionSubclass():
-                    shape = x.size()
-                    dtype = x.dtype
-                return torch.empty(shape, dtype=dtype, device="meta")
-            if isinstance(x, torch.Tensor):
-                return torch.empty(x.shape, dtype=x.dtype, device="meta")
-            return x
-
-        def _meta_to_tracker(x):
-            if isinstance(x, torch.Tensor):
-                return x.as_subclass(Tracker)  # zero-cost: reinterpret, no copy
-            return x
-
-        def _map_nested(fn, x):
-            if isinstance(x, (list, tuple)):
-                return type(x)(_map_nested(fn, i) for i in x)
-            if isinstance(x, dict):
-                return {k: _map_nested(fn, v) for k, v in x.items()}
-            return fn(x)
-
+        # Run the real operation on the device the user placed the model on.
+        # ``super().__torch_function__`` dispatches under
+        # DisableTorchFunctionSubclass, so it executes the op on the underlying
+        # tensors without recursing back into this method and returns results
+        # already wrapped as Trackers.  Using the real device (rather than
+        # "meta") keeps every tensor on the same device as the model's
+        # parameters, avoiding a model-vs-meta device mismatch.
         inp = is_in_place(func, kwargs)
-        try:
-            meta_result = func(*_map_nested(_to_meta, args), **_map_nested(_to_meta, kwargs))
-            if meta_result is None:
-                result = None
-            elif inp:
-                # In-place: return the original Tracker (not a fresh meta view)
-                result = args[0] if isinstance(args[0], Tracker) else _map_nested(_meta_to_tracker, meta_result)
-            else:
-                result = _map_nested(_meta_to_tracker, meta_result)
-        except Exception as _meta_err:
-            # Log which ops fail meta so we can identify OOM sources.
-            _shapes = [
-                getattr(a, "shape", None)
-                for a in (args if isinstance(args, (list, tuple)) else [args])
-                if hasattr(a, "shape")
-            ]
-            logger.debug("[meta-fail] %s  shapes=%s  err=%s", func.__name__, _shapes, _meta_err)
-            result = super().__torch_function__(func, types, args, kwargs)
+        result = super().__torch_function__(func, types, args, kwargs)
 
         f = None
 
