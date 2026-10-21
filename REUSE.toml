@@ -1,0 +1,16 @@
+version = 1
+
+# Cover the human-facing LICENSE, NOTICE and CONTRIBUTORS files, which live
+# outside LICENSES/ and have no comment syntax.
+[[annotations]]
+path = ["LICENSE", "NOTICE", "CONTRIBUTORS"]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 European Centre for Medium-Range Weather Forecasts (ECMWF)"
+SPDX-License-Identifier = "Apache-2.0"
+
+# Test fixtures (JSON has no comment syntax) and generated images.
+[[annotations]]
+path = ["tests/tinynet.json", "images/**"]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 European Centre for Medium-Range Weather Forecasts (ECMWF)"
+SPDX-License-Identifier = "Apache-2.0"

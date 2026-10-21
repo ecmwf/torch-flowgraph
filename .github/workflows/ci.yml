@@ -1,0 +1,61 @@
+# SPDX-FileCopyrightText: 2026 European Centre for Medium-Range Weather Forecasts (ECMWF)
+# SPDX-License-Identifier: Apache-2.0
+
+name: ci
+
+on:
+  # Trigger the workflow on push to main, except tag creation
+  push:
+    branches:
+    - "main"
+    tags-ignore:
+    - "**"
+    paths-ignore:
+    - "README.md"
+
+  # Trigger the workflow on pull request
+  pull_request:
+    paths-ignore:
+    - "README.md"
+
+  # Trigger the workflow manually
+  workflow_dispatch:
+
+  # Trigger after public PR approved for CI
+  pull_request_target:
+    types: [labeled]
+    paths-ignore:
+    - "README.md"
+
+# Fork code approved via the label runs with a read-only token and no secrets
+permissions:
+  contents: read
+
+env:
+  UV_SYSTEM_PYTHON: 1
+
+jobs:
+  # Run the test suite on GitHub-hosted runners
+  tests:
+    name: tests (python ${{ matrix.python-version }})
+    if: ${{ !github.event.pull_request.head.repo.fork && github.event.action != 'labeled' || github.event.label.name == 'approved-for-ci' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        # pull_request_target checks out the base branch by default; test the PR head instead
+        ref: ${{ github.event.pull_request.head.sha || github.sha }}
+        fetch-depth: 0 # setuptools-scm needs the history to compute the version
+        persist-credentials: false
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      with:
+        python-version: ${{ matrix.python-version }}
+    - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+    - name: Install
+      run: uv pip install ".[tests]"
+    - name: Test
+      run: pytest -v

@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 European Centre for Medium-Range Weather Forecasts (ECMWF)
+# SPDX-License-Identifier: Apache-2.0
+
+name: Code Quality checks for PRs
+
+on:
+  push:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    uses: ecmwf/reusable-workflows/.github/workflows/qa-precommit-run.yml@v2
+    with:
+      skip-hooks: "no-commit-to-branch"

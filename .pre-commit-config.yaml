@@ -1,19 +1,10 @@
+# SPDX-FileCopyrightText: 2026 European Centre for Medium-Range Weather Forecasts (ECMWF)
+# SPDX-License-Identifier: Apache-2.0
+
 repos:
 
-# Empty notebookds
-- repo: local
-  hooks:
-    - id: clear-notebooks-output
-      name: clear-notebooks-output
-      files: tools/.*\.ipynb$
-      stages: [commit]
-      language: python
-      entry: jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace
-      additional_dependencies: [jupyter]
-
-
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.6.0
+  rev: v6.0.0
   hooks:
   - id: check-yaml # Check YAML files for syntax errors only
     args: [--unsafe, --allow-multiple-documents]
@@ -25,13 +16,13 @@ repos:
   - id: check-merge-conflict # Check for files that contain merge conflict
 
 - repo: https://github.com/psf/black-pre-commit-mirror
-  rev: 24.4.2
+  rev: 26.10.1
   hooks:
     - id: black
       args: [--line-length=120]
 
 - repo: https://github.com/pycqa/isort
-  rev: 5.13.2
+  rev: 9.0.2
   hooks:
   - id: isort
     args:
@@ -41,11 +32,15 @@ repos:
 
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.4.6
+  rev: v0.15.20
   hooks:
-  - id: ruff
+  - id: ruff-check
     args:
     - --line-length=120
     - --fix
     - --exit-non-zero-on-fix
-    - --preview
+
+- repo: https://github.com/fsfe/reuse-tool
+  rev: v6.2.0
+  hooks:
+  - id: reuse
